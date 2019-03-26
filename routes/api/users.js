@@ -1,16 +1,16 @@
 const Router = require("koa-router");
 const router = new Router();
 const bcrypt = require("bcryptjs");
-const gravatar = require('gravatar');
-const tools = require("../../config/tools")
-const jwt = require('jsonwebtoken')
+const gravatar = require("gravatar");
+const tools = require("../../config/tools");
+const jwt = require("jsonwebtoken");
 const User = require("../../models/User");
-const keys = require("../../config/keys")
+const keys = require("../../config/keys");
 
-const passport = require('koa-passport')
+const passport = require("koa-passport");
 //引入input验证
-const validateRegisterInput = require('../../validation/register')
-const validateRLoginInput = require('../../validation/login')
+const validateRegisterInput = require("../../validation/register");
+const validateRLoginInput = require("../../validation/login");
 //test localhost:5000/api/users/test
 
 /**
@@ -30,12 +30,12 @@ router.get("/test", async ctx => {
  */
 router.post("/register", async ctx => {
   //    console.log(ctx.request.body)
-  const { errors, isValid } = validateRegisterInput(ctx.request.body)
+  const { errors, isValid } = validateRegisterInput(ctx.request.body);
   //判断验证是否通过
-  if(!isValid){
-    ctx.status=400
-    ctx.body=errors
-    return;   
+  if (!isValid) {
+    ctx.status = 400;
+    ctx.body = errors;
+    return;
   }
   //存储到数据库
   const findResult = await User.find({ email: ctx.request.body.email });
@@ -45,14 +45,18 @@ router.post("/register", async ctx => {
     ctx.body = { email: "邮箱已被占用" };
   } else {
     //没查到
-    const avatar = gravatar.url(ctx.request.body.email, {s: '200', r: 'pg', d: 'mm'});
+    const avatar = gravatar.url(ctx.request.body.email, {
+      s: "200",
+      r: "pg",
+      d: "mm"
+    });
     const newUser = new User({
       name: ctx.request.body.name,
       email: ctx.request.body.email,
       avatar,
       password: tools.enbcrypt(ctx.request.body.password)
     });
-    
+
     // console.log(newUser)
     //存储到数据库
     await newUser
@@ -73,36 +77,35 @@ router.post("/register", async ctx => {
  * @access 接口地址是公开的
  */
 router.post("/login", async ctx => {
-  const { errors, isValid } = validateLoginInput(ctx.request.body)
+  const { errors, isValid } = validateLoginInput(ctx.request.body);
   //判断验证是否通过
-  if(!isValid){
-    ctx.status=400
-    ctx.body=errors
+  if (!isValid) {
+    ctx.status = 400;
+    ctx.body = errors;
     return;
-    
   }
   //查询
-  const findResult = await User.find({email:ctx.request.body.email})
-  const user = findResult[0]
-  const password = ctx.request.body.password
+  const findResult = await User.find({ email: ctx.request.body.email });
+  const user = findResult[0];
+  const password = ctx.request.body.password;
   //判断是否查到
   if (findResult.length == 0) {
     ctx.status = 404;
     ctx.body = { email: "用户不存在" };
-  } else { 
+  } else {
     //查到后 验证密码
-    var result = await bcrypt.compareSync(password,user.password)
+    var result = await bcrypt.compareSync(password, user.password);
     //验证通过
-    if(result){
+    if (result) {
       //返回token
-      const payload = {id:user.id, name:user.name, avatar:user.avatar}
-      const token = jwt.sign(payload, keys.secretOrKey, { expiresIn: 3600});
+      const payload = { id: user.id, name: user.name, avatar: user.avatar };
+      const token = jwt.sign(payload, keys.secretOrKey, { expiresIn: 3600 });
 
-      ctx.status = 200
-      ctx.body = {success:true, token:"Bearer "+token}//token格式固定，有空格，不要写错了
+      ctx.status = 200;
+      ctx.body = { success: true, token: "Bearer " + token }; //token格式固定，有空格，不要写错了
     } else {
-      ctx.status = 400
-      ctx.body = {password:"密码错误"}
+      ctx.status = 400;
+      ctx.body = { password: "密码错误" };
     }
   }
 });
@@ -113,15 +116,16 @@ router.post("/login", async ctx => {
  * @access 接口地址是私密的
  */
 router.get(
-  '/current',
-  passport.authenticate('jwt', { session: false }),
-  async ctx =>{
+  "/current",
+  passport.authenticate("jwt", { session: false }),
+  async ctx => {
     // ctx.body = ctx.state.user
     ctx.body = {
-      id:ctx.state.user.id,
-      name:ctx.state.user.name,
-      email:ctx.state.user.email,
-      avatar:ctx.state.user.avatar,
-    }
-  })
+      id: ctx.state.user.id,
+      name: ctx.state.user.name,
+      email: ctx.state.user.email,
+      avatar: ctx.state.user.avatar
+    };
+  }
+);
 module.exports = router.routes();
