@@ -1,7 +1,11 @@
 const Router = require("koa-router");
 const router = new Router();
-var bcrypt = require("bcryptjs");
+
+const gravatar = require('gravatar');
+const tools = require("../../config/tools")
+
 const User = require("../../models/User");
+
 //test localhost:5000/api/users/test
 
 /**
@@ -29,18 +33,14 @@ router.post("/register", async ctx => {
     ctx.body = { email: "邮箱已被占用" };
   } else {
     //没查到
+    const avatar = gravatar.url(ctx.request.body.email, {s: '200', r: 'pg', d: 'mm'});
     const newUser = new User({
       name: ctx.request.body.name,
       email: ctx.request.body.email,
-      password: ctx.request.body.password
+      avatar,
+      password: tools.enbcrypt(ctx.request.body.password)
     });
-    await bcrypt.genSalt(10,(err, salt) => {
-      bcrypt.hash(newUser.password, salt, (err, hash) => {
-        // console.log(hash)
-        if(err) throw err;
-        newUser.password = hash
-      });
-    });
+    
     // console.log(newUser)
     //存储到数据库
     await newUser
