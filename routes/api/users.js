@@ -3,9 +3,9 @@ const router = new Router();
 const bcrypt = require("bcryptjs");
 const gravatar = require('gravatar');
 const tools = require("../../config/tools")
-
+const jwt = require('jsonwebtoken')
 const User = require("../../models/User");
-
+const keys = require("../../config/keys")
 //test localhost:5000/api/users/test
 
 /**
@@ -75,8 +75,11 @@ router.post("/login", async ctx => {
     //验证通过
     if(result){
       //返回token
+      const payload = {id:user.id, name:user.name, password:user.password}
+      const token = jwt.sign(payload, keys.secretOrKey, { expiresIn: 3600});
+
       ctx.status = 200
-      ctx.body = {success:true}
+      ctx.body = {success:true, token:"Bearer"+token}
     } else {
       ctx.status = 400
       ctx.body = {password:"密码错误"}
