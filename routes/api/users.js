@@ -6,6 +6,8 @@ const tools = require("../../config/tools")
 const jwt = require('jsonwebtoken')
 const User = require("../../models/User");
 const keys = require("../../config/keys")
+
+const passport = require('koa-passport')
 //test localhost:5000/api/users/test
 
 /**
@@ -75,15 +77,33 @@ router.post("/login", async ctx => {
     //验证通过
     if(result){
       //返回token
-      const payload = {id:user.id, name:user.name, password:user.password}
+      const payload = {id:user.id, name:user.name, avatar:user.avatar}
       const token = jwt.sign(payload, keys.secretOrKey, { expiresIn: 3600});
 
       ctx.status = 200
-      ctx.body = {success:true, token:"Bearer"+token}
+      ctx.body = {success:true, token:"Bearer "+token}//token格式固定，有空格，不要写错了
     } else {
       ctx.status = 400
       ctx.body = {password:"密码错误"}
     }
   }
 });
+
+/**
+ * @route GET api/users/current
+ * @desc 用户信息接口地址 返回用户信息
+ * @access 接口地址是私密的
+ */
+router.get(
+  '/current',
+  passport.authenticate('jwt', { session: false }),
+  async ctx =>{
+    // ctx.body = ctx.state.user
+    ctx.body = {
+      id:ctx.state.user.id,
+      name:ctx.state.user.name,
+      email:ctx.state.user.email,
+      avatar:ctx.state.user.avatar,
+    }
+  })
 module.exports = router.routes();

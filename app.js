@@ -1,12 +1,17 @@
 const koa = require('koa')
 const Router = require('koa-router')
 const mongoose = require('mongoose')
-var bodyParser = require('koa-bodyparser');
-
+const bodyParser = require('koa-bodyparser');
+const passport = require('koa-passport')
 //实例化
 const app = new koa()
 const router = new Router()
 app.use(bodyParser());
+
+app.use(passport.initialize())
+app.use(passport.session())
+
+
 //
 const users = require('./routes/api/users')
 //路由
@@ -25,7 +30,8 @@ mongoose
     .catch(err => {
         console.log(err)
     })
-
+//回调到config passport.js
+require("./config/passport")(passport)
 //配置路由地址 当localhost:5000/api/users 都会去users 路由下去找
 router.use('/api/users',users)
 //配置路由
