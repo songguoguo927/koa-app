@@ -5,6 +5,8 @@ const mongoose = require('mongoose')
 const app = new koa()
 const router = new Router()
 
+//
+const users = require('./routes/api/users')
 //路由
 
 router.get("/",async ctx => {
@@ -21,6 +23,9 @@ mongoose
     .catch(err => {
         console.log(err)
     })
+
+//配置路由地址 当localhost:5000/api/users 都会去users 路由下去找
+router.use('/api/users',users)
 //配置路由
 app.use(router.routes()).use(router.allowedMethods())
 
