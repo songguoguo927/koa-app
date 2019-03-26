@@ -8,6 +8,8 @@ const User = require("../../models/User");
 const keys = require("../../config/keys")
 
 const passport = require('koa-passport')
+
+const validateRegisterInput = require('../../validation/register')
 //test localhost:5000/api/users/test
 
 /**
@@ -27,6 +29,14 @@ router.get("/test", async ctx => {
  */
 router.post("/register", async ctx => {
   //    console.log(ctx.request.body)
+  const { errors, isValid } = validateRegisterInput(ctx.request.body)
+  //判断验证是否通过
+  if(!isValid){
+    ctx.status=400
+    ctx.body=errors
+    return;
+    
+  }
   //存储到数据库
   const findResult = await User.find({ email: ctx.request.body.email });
   // console.log(findResult)
